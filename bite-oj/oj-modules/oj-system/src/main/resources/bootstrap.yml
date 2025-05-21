@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: oj-system
+  profiles:
+    active: local
+  cloud:
+    nacos:
+      discovery:
+        namespace: 3ec50842-a66e-41b4-a39e-6321b7f9bd5d
+        server-addr: http://你安装nacos的云服务器内网ip:8848
+        username: nacos
+        password: nacosbitoj_8
+        ip: ${HOST_IP}
+      config:
+        namespace: 3ec50842-a66e-41b4-a39e-6321b7f9bd5d
+        server-addr: http://你安装nacos的云服务器内网ip:8848
+        file-extension: yaml
+        username: nacos
+        password: nacosbitoj_8

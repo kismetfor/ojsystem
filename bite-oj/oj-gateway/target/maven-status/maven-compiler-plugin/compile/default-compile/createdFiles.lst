@@ -1,0 +1,3 @@
+com/bite/gateway/OjGatewayApplication.class
+com/bite/gateway/filter/AuthFilter.class
+com/bite/gateway/properties/IgnoreWhiteProperties.class

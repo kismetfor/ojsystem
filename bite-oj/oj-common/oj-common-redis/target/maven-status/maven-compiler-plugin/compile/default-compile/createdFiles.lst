@@ -1,0 +1,3 @@
+com/bite/common/redis/config/RedisConfig.class
+com/bite/common/redis/config/JsonRedisSerializer.class
+com/bite/common/redis/service/RedisService.class

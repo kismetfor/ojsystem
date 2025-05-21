@@ -1,0 +1,4 @@
+com/bite/common/file/service/OSSService.class
+com/bite/common/file/config/OSSProperties.class
+com/bite/common/file/config/OSSConfig.class
+com/bite/common/file/domain/OSSResult.class

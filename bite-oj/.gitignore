@@ -1,0 +1,5 @@
+/logs/
+/.idea/
+/user-code/
+/user-code-pool/
+/deploy/test/nginx/dist/
