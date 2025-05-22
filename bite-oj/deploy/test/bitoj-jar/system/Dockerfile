@@ -1,4 +1,4 @@
-FROM openjdk:17.0.2
+FROM --platform=linux/arm64/v8 eclipse-temurin:17-jdk
 
 ADD ./oj-system.jar ./oj-system.jar
 

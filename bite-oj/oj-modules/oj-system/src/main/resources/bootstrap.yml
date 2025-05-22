@@ -14,6 +14,6 @@ spring:
       config:
         namespace: 3563d36d-9d76-4c29-80e2-62b485781f28
         server-addr: http://localhost:8848
-        file-extension: yaml
+        file-extension: yml
         username: nacos
         password: nacos
