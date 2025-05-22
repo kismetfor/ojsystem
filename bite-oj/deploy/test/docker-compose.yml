@@ -10,7 +10,7 @@ services:
         # root 密码
         MYSQL_ROOT_PASSWORD: 123456
       ports:
-        - "3306:3306"
+        - "3307:3306"
       volumes:
         # 数据挂载
         - ./mysql/mysqldata/:/var/lib/mysql/
@@ -26,7 +26,7 @@ services:
         retries: 10
 
   oj-nacos-server:
-    image: nacos/nacos-server:v2.2.2  # 替换为nacos的Docker镜像名及版本
+    image: nacos/nacos-server:v2.2.3  # 使用支持 ARM 架构的版本
     container_name: oj-nacos-server
     # 设置 Nacos 的运行模式为独立模式，限制了 Java 虚拟机的内存使用，并指定连接到 oj-mysql-server 数据库的信息
     environment:
@@ -36,9 +36,11 @@ services:
       - SPRING_DATASOURCE_PLATFORM=mysql
       - MYSQL_SERVICE_HOST=oj-mysql-server
       - MYSQL_SERVICE_PORT=3306
-      - MYSQL_SERVICE_DB_NAME=bitoj_nacos_local
-      - MYSQL_SERVICE_USER=ojtest
+      - MYSQL_SERVICE_DB_NAME=bitoj_nacos_dev
+      - MYSQL_SERVICE_USER=root
       - MYSQL_SERVICE_PASSWORD=123456
+      - NACOS_AUTH_ENABLED=false
+      - NACOS_AUTH_SYSTEM_TYPE=none
     volumes:
       - ./nacos/conf/application.properties:/home/nacos/conf/application.properties
     # 将容器的 8848 和 9848 端口映射到主机的对应端口
@@ -56,7 +58,7 @@ services:
 
   oj-xxl-job-server:
     container_name: oj-xxl-job-server
-    image: xuxueli/xxl-job-admin:2.4.0
+    image: xuxueli/xxl-job-admin:3.1.1
     # 设置连接MySQL的URL、用户名和密码等配置。
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://oj-mysql-server:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
