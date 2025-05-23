@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { getToken, removeToken } from './cookie'
 import router from '@/router';
+import { ElMessage } from 'element-plus'
 
 //不同的功能，通过axios请求的是不同接口的地址
 //127.0.0.1:19090

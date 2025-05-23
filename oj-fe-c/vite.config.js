@@ -26,7 +26,7 @@ export default defineConfig({
     port: 5174,
     proxy: {
       "/dev-api": {
-        target: "http://localhost:9201",
+        target: "http://127.0.0.1:19090/friend",
         rewrite: (p) => p.replace(/^\/dev-api/, ""),
       },
     },

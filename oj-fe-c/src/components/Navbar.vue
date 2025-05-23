@@ -11,7 +11,8 @@
       <img v-if="isLogin" class="oj-message" @click="goMessage" src="@/assets/message/message.png" />
       <el-dropdown v-if="isLogin">
         <div class="oj-navbar-name">
-          <img class="oj-head-image" v-if="isLogin" :src="userInfo.headImage" />
+
+          <img class="oj-head-image" v-if="isLogin" :src="userInfo.headImage || defaultAvatar" />
           <span>{{ userInfo.nickName }}</span>
         </div>
         <template #dropdown>
@@ -44,6 +45,7 @@ import { reactive, ref } from 'vue';
 import router from '@/router';
 import { getToken, removeToken } from '@/utils/cookie';
 import { logoutService, getUserInfoService } from '@/apis/user';
+import defaultAvatar from '@/assets/user/head_image.png'
 
 const isLogin = ref(false)
 const userInfo = reactive({
