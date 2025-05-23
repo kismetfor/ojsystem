@@ -45,13 +45,13 @@ import { reactive, ref } from 'vue';
 import router from '@/router';
 import { getToken, removeToken } from '@/utils/cookie';
 import { logoutService, getUserInfoService } from '@/apis/user';
-import defaultAvatar from '@/assets/user/head_image.png'
 
 const isLogin = ref(false)
 const userInfo = reactive({
   nickName: '',
   headImage: ''
 })
+const defaultAvatar = ref('/src/assets/user/head_image.png')
 
 async function checkLogin() {
   if (getToken()) {

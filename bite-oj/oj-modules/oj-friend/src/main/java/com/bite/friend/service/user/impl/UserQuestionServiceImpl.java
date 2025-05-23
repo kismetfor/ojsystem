@@ -30,7 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -108,11 +110,35 @@ public class UserQuestionServiceImpl implements IUserQuestionService {
         judgeSubmitDTO.setExamId(submitDTO.getExamId());
         judgeSubmitDTO.setProgramType(submitDTO.getProgramType());
         judgeSubmitDTO.setUserCode(codeConnect(submitDTO.getUserCode(), questionES.getMainFuc()));
-        List<QuestionCase> questionCaseList = JSONUtil.toList(questionES.getQuestionCase(), QuestionCase.class);
-        List<String> inputList = questionCaseList.stream().map(QuestionCase::getInput).toList();
+
+        // 对 questionCase 做健壮性处理
+        List<QuestionCase> questionCaseList = new ArrayList<>();
+        String rawCase = questionES.getQuestionCase();
+
+        if (StrUtil.isNotBlank(rawCase)) {
+            try {
+                questionCaseList = JSONUtil.toList(rawCase, QuestionCase.class);
+            } catch (Exception e) {
+                log.error("解析题目用例失败，questionId={}，原始数据={}", questionId, rawCase, e);
+                // 解析失败也不中断业务逻辑，继续使用空列表
+            }
+        } else {
+            log.warn("题目用例为空，questionId={}", questionId);
+        }
+
+        List<String> inputList = questionCaseList.stream()
+            .map(QuestionCase::getInput)
+            .filter(Objects::nonNull)
+            .toList();
+
+        List<String> outputList = questionCaseList.stream()
+            .map(QuestionCase::getOutput)
+            .filter(Objects::nonNull)
+            .toList();
+
         judgeSubmitDTO.setInputList(inputList);
-        List<String> outputList = questionCaseList.stream().map(QuestionCase::getOutput).toList();
         judgeSubmitDTO.setOutputList(outputList);
+
         return judgeSubmitDTO;
     }
 
