@@ -38,13 +38,15 @@ public class JudgeServiceImpl implements IJudgeService {
     @Override
     public UserQuestionResultVO doJudgeJavaCode(JudgeSubmitDTO judgeSubmitDTO) {
         log.info("---- 判题逻辑开始 -------");
+        // 使用沙箱池执行 Java 代码，获取运行结果
         SandBoxExecuteResult sandBoxExecuteResult =
                 sandboxPoolService.exeJavaCode(judgeSubmitDTO.getUserId(), judgeSubmitDTO.getUserCode(), judgeSubmitDTO.getInputList());
         UserQuestionResultVO userQuestionResultVO = new UserQuestionResultVO();
         if (sandBoxExecuteResult != null && CodeRunStatus.SUCCEED.equals(sandBoxExecuteResult.getRunStatus())) {
-            //比对直接结果  时间限制  空间限制的比对
+            // 如果代码成功执行，则进行判题逻辑（输出比对、资源限制判断等）
             userQuestionResultVO = doJudge(judgeSubmitDTO, sandBoxExecuteResult, userQuestionResultVO);
         } else {
+            // 执行失败情况（编译错误、异常等）
             userQuestionResultVO.setPass(Constants.FALSE);
             if (sandBoxExecuteResult != null) {
                 userQuestionResultVO.setExeMessage(sandBoxExecuteResult.getExeMessage());
@@ -53,6 +55,7 @@ public class JudgeServiceImpl implements IJudgeService {
             }
             userQuestionResultVO.setScore(JudgeConstants.ERROR_SCORE);
         }
+        // 将评测结果保存到数据库中
         saveUserSubmit(judgeSubmitDTO, userQuestionResultVO);
         log.info("判题逻辑结束，判题结果为： {} ", userQuestionResultVO);
         return userQuestionResultVO;
@@ -61,8 +64,10 @@ public class JudgeServiceImpl implements IJudgeService {
     private UserQuestionResultVO doJudge(JudgeSubmitDTO judgeSubmitDTO,
                                          SandBoxExecuteResult sandBoxExecuteResult,
                                          UserQuestionResultVO userQuestionResultVO) {
+        // 获取沙箱执行输出结果和预期输出
         List<String> exeOutputList = sandBoxExecuteResult.getOutputList();
         List<String> outputList = judgeSubmitDTO.getOutputList();
+        // 判定输出长度是否一致，不一致直接失败
         if (outputList.size() != exeOutputList.size()) {
             userQuestionResultVO.setScore(JudgeConstants.ERROR_SCORE);
             userQuestionResultVO.setPass(Constants.FALSE);
@@ -70,7 +75,9 @@ public class JudgeServiceImpl implements IJudgeService {
             return userQuestionResultVO;
         }
         List<UserExeResult> userExeResultList = new ArrayList<>();
+        // 进行逐项输出比对
         boolean passed = resultCompare(judgeSubmitDTO, exeOutputList, outputList, userExeResultList);
+        // 汇总比对结果，补充更多信息（内存、时间判断）
         return assembleUserQuestionResultVO(judgeSubmitDTO, sandBoxExecuteResult, userQuestionResultVO, userExeResultList, passed);
     }
 
@@ -78,25 +85,30 @@ public class JudgeServiceImpl implements IJudgeService {
                                                               SandBoxExecuteResult sandBoxExecuteResult,
                                                               UserQuestionResultVO userQuestionResultVO,
                                                               List<UserExeResult> userExeResultList, boolean passed) {
+        // 填充执行用例列表
         userQuestionResultVO.setUserExeResultList(userExeResultList);
+        // 判断是否通过输出比对
         if (!passed) {
             userQuestionResultVO.setPass(Constants.FALSE);
             userQuestionResultVO.setScore(JudgeConstants.ERROR_SCORE);
             userQuestionResultVO.setExeMessage(CodeRunStatus.NOT_ALL_PASSED.getMsg());
             return userQuestionResultVO;
         }
+        // 判断内存限制
         if (sandBoxExecuteResult.getUseMemory() > judgeSubmitDTO.getSpaceLimit()) {
             userQuestionResultVO.setPass(Constants.FALSE);
             userQuestionResultVO.setScore(JudgeConstants.ERROR_SCORE);
             userQuestionResultVO.setExeMessage(CodeRunStatus.OUT_OF_MEMORY.getMsg());
             return userQuestionResultVO;
         }
+        // 判断时间限制
         if (sandBoxExecuteResult.getUseTime() > judgeSubmitDTO.getTimeLimit()) {
             userQuestionResultVO.setPass(Constants.FALSE);
             userQuestionResultVO.setScore(JudgeConstants.ERROR_SCORE);
             userQuestionResultVO.setExeMessage(CodeRunStatus.OUT_OF_TIME.getMsg());
             return userQuestionResultVO;
         }
+        // 判题通过，计算得分
         userQuestionResultVO.setPass(Constants.TRUE);
         int score = judgeSubmitDTO.getDifficulty() * JudgeConstants.DEFAULT_SCORE;
         userQuestionResultVO.setScore(score);
@@ -110,11 +122,13 @@ public class JudgeServiceImpl implements IJudgeService {
             String output = outputList.get(index);
             String exeOutPut = exeOutputList.get(index);
             String input = judgeSubmitDTO.getInputList().get(index);
+            // 记录每个用例的输入输出及结果
             UserExeResult userExeResult = new UserExeResult();
             userExeResult.setInput(input);
             userExeResult.setOutput(output);
             userExeResult.setExeOutput(exeOutPut);
             userExeResultList.add(userExeResult);
+            // 比对是否一致，不一致则判题失败
             if (!output.equals(exeOutPut)) {
                 passed = false;
                 log.info("输入：{}， 期望输出：{}， 实际输出：{} ", input, output, exeOutputList);
@@ -124,6 +138,7 @@ public class JudgeServiceImpl implements IJudgeService {
     }
 
     private void saveUserSubmit(JudgeSubmitDTO judgeSubmitDTO, UserQuestionResultVO userQuestionResultVO) {
+        // 将判题结果封装成数据库实体
         UserSubmit userSubmit = new UserSubmit();
         BeanUtil.copyProperties(userQuestionResultVO, userSubmit);
         userSubmit.setUserId(judgeSubmitDTO.getUserId());
@@ -133,11 +148,13 @@ public class JudgeServiceImpl implements IJudgeService {
         userSubmit.setUserCode(judgeSubmitDTO.getUserCode());
         userSubmit.setCaseJudgeRes(JSON.toJSONString(userQuestionResultVO.getUserExeResultList()));
         userSubmit.setCreateBy(judgeSubmitDTO.getUserId());
+        // 删除原有记录（同一用户+题目+考试），保证幂等性
         userSubmitMapper.delete(new LambdaQueryWrapper<UserSubmit>()
                 .eq(UserSubmit::getUserId, judgeSubmitDTO.getUserId())
                 .eq(UserSubmit::getQuestionId, judgeSubmitDTO.getQuestionId())
                 .isNull(judgeSubmitDTO.getExamId() == null, UserSubmit::getExamId)
                 .eq(judgeSubmitDTO.getExamId() != null, UserSubmit::getExamId, judgeSubmitDTO.getExamId()));
+        // 插入新记录
         userSubmitMapper.insert(userSubmit);
     }
 }

@@ -28,7 +28,6 @@ services:
   oj-nacos-server:
     image: nacos/nacos-server:v2.2.2-slim  # 使用支持 ARM 架构的版本
     container_name: oj-nacos-server
-    # 设置 Nacos 的运行模式为独立模式，限制了 Java 虚拟机的内存使用，并指定连接到 oj-mysql-server 数据库的信息
     environment:
       - MODE=standalone
       - JVM_XMS=256m
@@ -41,12 +40,15 @@ services:
       - MYSQL_SERVICE_PASSWORD=123456
       - NACOS_AUTH_ENABLED=false
       - NACOS_AUTH_SYSTEM_TYPE=none
+      - NACOS_SERVER_GRPC_PORT=9848
+      - NACOS_SERVER_GRPC_PORT_OFFSET=1000
+      - NACOS_SERVER_GRPC_PORT_OFFSET_ENABLED=true
     volumes:
       - ./nacos/conf/application.properties:/home/nacos/conf/application.properties
-    # 将容器的 8848 和 9848 端口映射到主机的对应端口
     ports:
       - "8848:8848"
       - "9848:9848"
+      - "9849:9849"
     depends_on:
       oj-mysql-server:
         condition: service_healthy
@@ -164,8 +166,8 @@ services:
       I18N_LOCALE: zh-CN
       ELASTICSEARCH_URL: http://elasticsearch:9200
 
-  oj-rabbitMQ-server:
-    container_name: oj-rabbitMQ-server
+  oj-rabbit-server:
+    container_name: oj-rabbit-server
     image: rabbitmq:3.8.30-management
     ports:
       - "5672:5672"
@@ -221,7 +223,7 @@ services:
         condition: service_healthy
       oj-elasticsearch-server:
         condition: service_healthy
-      oj-rabbitMQ-server:
+      oj-rabbit-server:
         condition: service_healthy
 
   oj-job:
@@ -258,5 +260,5 @@ services:
     depends_on:
       oj-nacos-server:
         condition: service_healthy
-      oj-rabbitMQ-server:
+      oj-rabbit-server:
         condition: service_healthy

@@ -8,12 +8,11 @@ spring:
       discovery:
         namespace: 3563d36d-9d76-4c29-80e2-62b485781f28
         server-addr: http://localhost:8848
-        username: nacos
-        password: nacos
-        ip: ${HOST_IP}
+#        username: nacos
+#        password: nacos
       config:
         namespace: 3563d36d-9d76-4c29-80e2-62b485781f28
         server-addr: http://localhost:8848
         file-extension: yml
-        username: nacos
-        password: nacos
+#        username: nacos
+#        password: nacos
